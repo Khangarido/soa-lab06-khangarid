@@ -1,132 +1,133 @@
-# Lab 06: JSON Service and SOAP Service Integration
+# Лаб 06: JSON Сервис ба SOAP Сервисийн Интеграци
 
-**Student:** Khangarid | **ID:** 22B1NUM4730  
-**Course:** Service Oriented Architecture — National University of Mongolia (NUM)  
-**Semester:** Spring 2026
+**Оюутан:** Хангарид | **Оюутны код:** 22B1NUM4730  
+**Хичээл:** Үйлчилгээнд суурилсан архитектур (SOA) — МУИС  
+**Улирал:** 2026 хавар
 
 ---
 
-## Architecture Overview
+## Архитектурын тойм
 
-This project implements **Option 2 — Independent Databases** with **Bonus 3: JWT Token**.
+Энэ төсөлд **Сонголт 2 — Бие даасан өгөгдлийн сангууд** болон **Бонус 3: JWT Token** хэрэгжүүлсэн.
 
 ```
 ┌─────────────────┐       SOAP/XML        ┌─────────────────────┐
 │  frontend-app   │ ────────────────────►  │  user-soap-service  │
-│  (index.html)   │                        │  Port 8080          │
+│  (index.html)   │                        │  Порт 8080          │
 │                 │                        │  H2: authdb         │
-│  Register/Login │   ◄── JWT token ────   │  (UserAuth table)   │
+│  Бүртгэл/Нэвтрэх│  ◄── JWT token ────   │  (UserAuth хүснэгт) │
 └────────┬────────┘                        └──────────┬──────────┘
          │                                            │
          │  REST/JSON + Bearer token                  │ SOAP ValidateToken
          │                                            │
          ▼                                            │
 ┌─────────────────────┐                               │
-│  user-json-service  │  ── SOAP XML call ──────────► │
-│  Port 8081          │                               │
-│  H2: profiledb      │  Interceptor validates token
-│  (UserProfile table)│  before allowing REST access
+│  user-json-service  │  ── SOAP XML дуудлага ──────► │
+│  Порт 8081          │                               │
+│  H2: profiledb      │  Interceptor нь токеныг
+│  (UserProfile       │  шалгасны дараа зөвшөөрнө
+│   хүснэгт)          │
 └─────────────────────┘
 ```
 
-### Database Choice: Option 2 — Independent Databases
+### Өгөгдлийн сангийн сонголт: Сонголт 2 — Бие даасан өгөгдлийн сан
 
-Each service maintains its own **H2 in-memory database**:
+Сервис бүр өөрийн **H2 in-memory өгөгдлийн сан**-тай:
 
-| Service            | DB URL                | Table        |
-|--------------------|----------------------|--------------|
+| Сервис             | DB URL                  | Хүснэгт        |
+|--------------------|------------------------|----------------|
 | user-soap-service  | `jdbc:h2:mem:authdb`    | `user_auth`    |
 | user-json-service  | `jdbc:h2:mem:profiledb` | `user_profile` |
 
-This enforces **loose coupling** between services — a core SOA principle. Each service owns its data and can be deployed, scaled, and maintained independently.
+Ингэснээр сервисүүд хоорондоо **сул холбоотой (loose coupling)** байна — энэ бол SOA-ийн гол зарчим. Сервис бүр өөрийн өгөгдлийг эзэмшиж, бие даан deploy хийх, масштаблах боломжтой.
 
-### Bonus 3: JWT Token
+### Бонус 3: JWT Token
 
-- On login, the SOAP service generates a **signed JWT token** (HMAC-SHA256, 1-hour expiry).
-- The token is stored in `localStorage` on the client.
-- Every REST call to the JSON service includes `Authorization: Bearer <token>`.
-- The JSON service's **Interceptor** sends a SOAP `validateTokenRequest` to the SOAP service.
-- Only valid tokens are allowed through; invalid tokens receive HTTP 401.
+- Нэвтрэх үед SOAP сервис нь **JWT token** (HMAC-SHA256, 1 цагийн хугацаатай) үүсгэнэ.
+- Токен нь клиент талын `localStorage`-д хадгалагдана.
+- JSON сервис рүү хийх бүх REST дуудлагад `Authorization: Bearer <token>` header-ийг илгээнэ.
+- JSON сервисийн **Interceptor** нь SOAP сервис рүү `validateTokenRequest` илгээж токеныг шалгана.
+- Зөвхөн хүчинтэй токентой хүсэлтийг зөвшөөрнө, хүчингүй бол HTTP 401 буцаана.
 
 ---
 
-## How to Run
+## Ажиллуулах заавар
 
-### Prerequisites
+### Шаардлага
 - **Java 17+** (JDK)
-- **Maven 3.8+** (or use the included `mvnw` wrapper)
+- **Maven 3.8+** (эсвэл төсөлд орсон `mvnw` wrapper ашиглах)
 
-### Step 1: Start the SOAP Service (port 8080)
+### 1-р алхам: SOAP сервисийг ажиллуулах (порт 8080)
 
 ```bash
 cd user-soap-service
 ./mvnw clean spring-boot:run
 ```
 
-On Windows:
+Windows дээр:
 ```cmd
 cd user-soap-service
 mvnw.cmd clean spring-boot:run
 ```
 
-Verify: Open http://localhost:8080/ws/auth.wsdl — you should see the generated WSDL.
+Шалгах: http://localhost:8080/ws/auth.wsdl нээхэд WSDL файл харагдана.
 
-### Step 2: Start the JSON Service (port 8081)
+### 2-р алхам: JSON сервисийг ажиллуулах (порт 8081)
 
 ```bash
 cd user-json-service
 ./mvnw clean spring-boot:run
 ```
 
-On Windows:
+Windows дээр:
 ```cmd
 cd user-json-service
 mvnw.cmd clean spring-boot:run
 ```
 
-Verify: The service starts and pre-loads a dummy profile for Khangarid.
+Шалгах: Сервис ачаалагдахад Хангарид-ийн dummy профайл автоматаар үүснэ.
 
-### Step 3: Open the Frontend
+### 3-р алхам: Frontend нээх
 
-Open `frontend-app/index.html` directly in a browser (no web server needed).
+`frontend-app/index.html` файлыг браузер дээр шууд нээнэ (вэб сервер шаардлагагүй).
 
-### Usage Flow
+### Ашиглах дараалал
 
-1. **Register** a user (e.g., `khangarid` / `pass123`) — sends SOAP XML to port 8080
-2. **Login** with the same credentials — receives JWT token
-3. **View Profile** — automatically calls REST on port 8081 with the JWT token
-4. **Edit Profile** — update name, email, bio, phone via REST PUT
+1. **Бүртгүүлэх** — жишээ нь `khangarid` / `pass123` гэж бичээд Register дарна → SOAP XML-ээр порт 8080 руу илгээнэ
+2. **Нэвтрэх** — Login дарахад JWT token буцаж ирнэ
+3. **Профайл харах** — Токентой хамт порт 8081 руу REST дуудлага хийж, хэрэглэгчийн мэдээлэл харуулна
+4. **Профайл засах** — Нэр, имэйл, био, утас зэргийг REST PUT-ээр шинэчилнэ
 
-### H2 Console (for debugging)
+### H2 Console (дебаг хийхэд)
 
-- SOAP service: http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:mem:authdb`)
-- JSON service: http://localhost:8081/h2-console (JDBC URL: `jdbc:h2:mem:profiledb`)
+- SOAP сервис: http://localhost:8080/h2-console (JDBC URL: `jdbc:h2:mem:authdb`)
+- JSON сервис: http://localhost:8081/h2-console (JDBC URL: `jdbc:h2:mem:profiledb`)
 
 ---
 
-## Project Structure
+## Төслийн бүтэц
 
 ```
 lab01/
-├── user-soap-service/          # SOAP Authentication Service (Port 8080)
+├── user-soap-service/          # SOAP Баталгаажуулалтын сервис (Порт 8080)
 │   ├── src/main/resources/
-│   │   ├── auth.xsd            # XSD contract for SOAP operations
+│   │   ├── auth.xsd            # SOAP үйлдлүүдийн XSD гэрээ
 │   │   └── application.properties
 │   └── src/main/java/com/example/demo/
 │       ├── entity/             # UserAuth JPA entity
 │       ├── repository/         # Spring Data JPA repository
-│       ├── service/            # JWT generation & validation logic
+│       ├── service/            # JWT үүсгэх ба шалгах логик
 │       ├── endpoint/           # Spring WS SOAP @Endpoint
-│       ├── gen/                # JAXB-annotated request/response classes
-│       └── config/             # WebService config, CORS filter
+│       ├── gen/                # JAXB request/response классууд
+│       └── config/             # WebService тохиргоо, CORS filter
 │
-├── user-json-service/          # REST Profile Service (Port 8081)
+├── user-json-service/          # REST Профайл сервис (Порт 8081)
 │   └── src/main/java/com/example/demo/
 │       ├── entity/             # UserProfile JPA entity
 │       ├── repository/         # Spring Data JPA repository
 │       ├── controller/         # REST CRUD controller
-│       ├── interceptor/        # Token validation via SOAP call
-│       └── config/             # WebMvc + CORS config
+│       ├── interceptor/        # SOAP-оор токен шалгах middleware
+│       └── config/             # WebMvc + CORS тохиргоо
 │
 ├── frontend-app/               # Vanilla JS Frontend
 │   └── index.html
@@ -136,4 +137,17 @@ lab01/
 
 ---
 
-*Bayarlalaa! — NUM SOA Lab 06*
+## Технологи
+
+| Технологи | Хэрэглээ |
+|-----------|---------|
+| Spring Boot 3.4.3 | Backend framework |
+| Spring Web Services | SOAP endpoint |
+| Spring Data JPA | Өгөгдлийн сангийн удирдлага |
+| H2 Database | In-memory өгөгдлийн сан |
+| JJWT 0.12.6 | JWT token үүсгэх/шалгах |
+| Vanilla JavaScript | Frontend (Fetch API) |
+
+---
+
+*Баярлалаа! — МУИС, Үйлчилгээнд суурилсан архитектур, Лаб 06*
