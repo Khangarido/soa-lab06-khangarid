@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+    <meta charset="UTF-8">
+    <title>Architecture Diagram — Lab 06 SOA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #f8fafc;
+            padding: 2rem;
+            display: flex;
+            justify-content: center;
+        }
+        .diagram {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2.5rem;
+            max-width: 950px;
+            width: 100%;
+            box-shadow: 0 4px 24px rgba(0,0,0,.06);
+        }
+        h1 {
+            text-align: center;
+            font-size: 1.4rem;
+            color: #1e293b;
+            margin-bottom: .3rem;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: .85rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+        .row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        .box {
+            border: 2px solid #334155;
+            border-radius: 12px;
+            padding: 1.2rem 1.5rem;
+            min-width: 220px;
+            text-align: center;
+            position: relative;
+        }
+        .box h3 { font-size: .95rem; margin-bottom: .5rem; }
+        .box p { font-size: .78rem; color: #64748b; line-height: 1.5; }
+        .box .port {
+            position: absolute;
+            top: -10px;
+            right: 12px;
+            background: #1e293b;
+            color: #fff;
+            font-size: .65rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .frontend { border-color: #8b5cf6; background: #f5f3ff; }
+        .frontend h3 { color: #7c3aed; }
+        .soap { border-color: #0ea5e9; background: #f0f9ff; }
+        .soap h3 { color: #0284c7; }
+        .rest { border-color: #22c55e; background: #f0fdf4; }
+        .rest h3 { color: #16a34a; }
+        .db { border-color: #f59e0b; background: #fffbeb; border-style: dashed; }
+        .db h3 { color: #d97706; }
+
+        .arrow-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .3rem;
+            margin: .8rem 0;
+        }
+        .arrow-line {
+            width: 2px;
+            height: 20px;
+            background: #94a3b8;
+        }
+        .arrow-label {
+            font-size: .75rem;
+            color: #475569;
+            font-weight: 600;
+            background: #f1f5f9;
+            padding: 3px 12px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        .arrow-h {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        .arrow-h-line {
+            width: 60px;
+            height: 2px;
+            background: #94a3b8;
+        }
+        .arrow-head {
+            font-size: 1rem;
+            color: #94a3b8;
+            line-height: 1;
+        }
+
+        .flow-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .flow-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .6rem;
+        }
+
+        .legend {
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+        }
+        .legend h4 {
+            font-size: .85rem;
+            color: #334155;
+            margin-bottom: .5rem;
+        }
+        .legend-items {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .75rem;
+            color: #64748b;
+        }
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            border: 2px solid;
+        }
+        .info {
+            margin-top: 1rem;
+            font-size: .75rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="diagram">
+        <h1>Lab 06: SOA Architecture Diagram</h1>
+        <p class="subtitle">Хангарид (22B1NUM4730) — МУИС — Үйлчилгээнд суурилсан архитектур — 2026 хавар</p>
+
+        <!-- Frontend -->
+        <div class="row">
+            <div class="box frontend">
+                <h3>Frontend App</h3>
+                <p>
+                    Vanilla JavaScript (index.html)<br>
+                    Fetch API ашиглана<br>
+                    localStorage-д JWT хадгална
+                </p>
+            </div>
+        </div>
+
+        <!-- Arrows down -->
+        <div style="display:flex; justify-content:center; gap:12rem;">
+            <div class="arrow-section">
+                <div class="arrow-line"></div>
+                <div class="arrow-label">SOAP/XML</div>
+                <div class="arrow-label" style="font-size:.65rem; background:#f0f9ff; border-color:#bae6fd;">Register, Login</div>
+                <div class="arrow-head">&#9660;</div>
+            </div>
+            <div class="arrow-section">
+                <div class="arrow-line"></div>
+                <div class="arrow-label">REST/JSON</div>
+                <div class="arrow-label" style="font-size:.65rem; background:#f0fdf4; border-color:#bbf7d0;">Bearer Token + CRUD</div>
+                <div class="arrow-head">&#9660;</div>
+            </div>
+        </div>
+
+        <!-- Services -->
+        <div class="row">
+            <div class="box soap">
+                <div class="port">:8080</div>
+                <h3>SOAP Service</h3>
+                <p>
+                    Spring Web Services<br>
+                    XSD: auth.xsd<br>
+                    <strong>RegisterUser</strong><br>
+                    <strong>LoginUser</strong> → JWT үүсгэнэ<br>
+                    <strong>ValidateToken</strong> → JWT шалгана
+                </p>
+            </div>
+
+            <div style="display:flex; align-items:center;">
+                <div class="arrow-h">
+                    <div class="arrow-head">&#9664;</div>
+                    <div style="text-align:center;">
+                        <div class="arrow-h-line"></div>
+                        <div class="arrow-label" style="margin-top:4px; font-size:.65rem;">SOAP XML</div>
+                        <div style="font-size:.6rem; color:#94a3b8;">ValidateToken</div>
+                        <div class="arrow-h-line"></div>
+                    </div>
+                    <div class="arrow-head">&#9654;</div>
+                </div>
+            </div>
+
+            <div class="box rest">
+                <div class="port">:8081</div>
+                <h3>JSON/REST Service</h3>
+                <p>
+                    Spring Web MVC<br>
+                    <strong>Interceptor (Middleware)</strong><br>
+                    Token → SOAP руу шалгуулна<br>
+                    CRUD: GET, POST, PUT, DELETE<br>
+                    /users endpoint
+                </p>
+            </div>
+        </div>
+
+        <!-- Arrows to DBs -->
+        <div style="display:flex; justify-content:center; gap:16rem;">
+            <div class="arrow-section">
+                <div class="arrow-head">&#9660;</div>
+                <div class="arrow-label" style="font-size:.65rem;">JPA / Hibernate</div>
+            </div>
+            <div class="arrow-section">
+                <div class="arrow-head">&#9660;</div>
+                <div class="arrow-label" style="font-size:.65rem;">JPA / Hibernate</div>
+            </div>
+        </div>
+
+        <!-- Databases -->
+        <div class="row">
+            <div class="box db">
+                <h3>H2: authdb</h3>
+                <p>
+                    user_auth хүснэгт<br>
+                    (id, username, password, token)
+                </p>
+            </div>
+
+            <div style="width:100px;"></div>
+
+            <div class="box db">
+                <h3>H2: profiledb</h3>
+                <p>
+                    user_profile хүснэгт<br>
+                    (id, userId, name, email, bio, phone)
+                </p>
+            </div>
+        </div>
+
+        <!-- Option 2 label -->
+        <div style="text-align:center; margin-top:.8rem;">
+            <span class="arrow-label" style="background:#fffbeb; border-color:#fde68a; color:#92400e; font-size:.75rem;">
+                Сонголт 2: Бие даасан өгөгдлийн сангууд (Independent Databases)
+            </span>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h4>Тэмдэглэгээ:</h4>
+            <div class="legend-items">
+                <div class="legend-item"><div class="legend-dot" style="border-color:#8b5cf6; background:#f5f3ff;"></div> Frontend (Vanilla JS)</div>
+                <div class="legend-item"><div class="legend-dot" style="border-color:#0ea5e9; background:#f0f9ff;"></div> SOAP Service (XML/WSDL)</div>
+                <div class="legend-item"><div class="legend-dot" style="border-color:#22c55e; background:#f0fdf4;"></div> REST Service (JSON)</div>
+                <div class="legend-item"><div class="legend-dot" style="border-color:#f59e0b; background:#fffbeb;"></div> H2 Database (In-memory)</div>
+                <div class="legend-item"><div class="legend-dot" style="border-color:#ef4444; background:#fef2f2;"></div> Bonus 3: JWT Token (HMAC-SHA256, 1 цаг)</div>
+            </div>
+        </div>
+
+        <p class="info">Энэ диаграмыг screenshot авч тайландаа хавсаргана уу.</p>
+    </div>
+</body>
+</html>
