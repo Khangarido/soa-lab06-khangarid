@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab 06 - SOA Integration | NUM</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container { max-width: 720px; margin: 0 auto; }
+
+        h1 {
+            text-align: center;
+            font-size: 1.75rem;
+            margin-bottom: .25rem;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle {
+            text-align: center;
+            font-size: .85rem;
+            color: #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+        .card h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #38bdf8;
+        }
+
+        .form-row {
+            display: flex;
+            gap: .75rem;
+            margin-bottom: .75rem;
+            flex-wrap: wrap;
+        }
+        .form-row input {
+            flex: 1;
+            min-width: 140px;
+            padding: .6rem .85rem;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: .9rem;
+            outline: none;
+            transition: border-color .2s;
+        }
+        .form-row input:focus { border-color: #38bdf8; }
+
+        button {
+            padding: .6rem 1.2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: .9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity .2s, transform .1s;
+        }
+        button:hover { opacity: .9; }
+        button:active { transform: scale(.97); }
+
+        .btn-register { background: #6366f1; color: #fff; }
+        .btn-login    { background: #38bdf8; color: #0f172a; }
+        .btn-profile  { background: #22c55e; color: #0f172a; }
+        .btn-logout   { background: #ef4444; color: #fff; }
+        .btn-update   { background: #f59e0b; color: #0f172a; }
+
+        .msg {
+            margin-top: .75rem;
+            padding: .6rem .85rem;
+            border-radius: 8px;
+            font-size: .85rem;
+            display: none;
+        }
+        .msg.success { display: block; background: #064e3b; color: #6ee7b7; border: 1px solid #065f46; }
+        .msg.error   { display: block; background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+        .msg.info    { display: block; background: #172554; color: #93c5fd; border: 1px solid #1e3a5f; }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 110px 1fr;
+            gap: .4rem .75rem;
+            font-size: .9rem;
+        }
+        .profile-grid dt { color: #94a3b8; font-weight: 600; }
+        .profile-grid dd { color: #e2e8f0; }
+
+        .edit-form { display: none; margin-top: 1rem; }
+        .edit-form input {
+            width: 100%;
+            padding: .55rem .75rem;
+            margin-bottom: .5rem;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: .85rem;
+            outline: none;
+        }
+        .edit-form input:focus { border-color: #f59e0b; }
+
+        .token-display {
+            margin-top: .75rem;
+            padding: .5rem .75rem;
+            background: #0f172a;
+            border-radius: 8px;
+            font-family: 'Cascadia Code', 'Fira Code', monospace;
+            font-size: .7rem;
+            word-break: break-all;
+            color: #94a3b8;
+            display: none;
+        }
+
+        .actions { display: flex; gap: .5rem; margin-top: 1rem; flex-wrap: wrap; }
+
+        .hidden { display: none !important; }
+
+        footer {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: .75rem;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SOA Lab 06: Service Integration</h1>
+        <p class="subtitle">SOAP Authentication + REST Profile | NUM - Khangarid (22B1NUM4730)</p>
+
+        <!-- ===== AUTHENTICATION (SOAP) ===== -->
+        <div class="card" id="auth-card">
+            <h2>Authentication (SOAP Service - port 8080)</h2>
+
+            <div class="form-row">
+                <input type="text" id="reg-user" placeholder="Username">
+                <input type="password" id="reg-pass" placeholder="Password">
+                <button class="btn-register" onclick="register()">Register</button>
+            </div>
+
+            <div class="form-row">
+                <input type="text" id="login-user" placeholder="Username">
+                <input type="password" id="login-pass" placeholder="Password">
+                <button class="btn-login" onclick="login()">Login</button>
+            </div>
+
+            <div id="auth-msg" class="msg"></div>
+            <div id="token-display" class="token-display"></div>
+        </div>
+
+        <!-- ===== PROFILE (REST/JSON) ===== -->
+        <div class="card hidden" id="profile-card">
+            <h2>My Profile (JSON Service - port 8081)</h2>
+
+            <div id="profile-view">
+                <dl class="profile-grid" id="profile-data"></dl>
+            </div>
+
+            <div class="edit-form" id="edit-form">
+                <input type="text" id="edit-name"  placeholder="Name">
+                <input type="text" id="edit-email" placeholder="Email">
+                <input type="text" id="edit-bio"   placeholder="Bio">
+                <input type="text" id="edit-phone" placeholder="Phone">
+                <button class="btn-update" onclick="updateProfile()">Save Changes</button>
+            </div>
+
+            <div id="profile-msg" class="msg"></div>
+
+            <div class="actions">
+                <button class="btn-profile" onclick="loadProfiles()">Refresh</button>
+                <button class="btn-update" onclick="toggleEdit()">Edit Profile</button>
+                <button class="btn-logout" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>NUM - Service Oriented Architecture | Spring 2026</footer>
+
+    <script>
+        const SOAP_URL = 'http://localhost:8080/ws';
+        const REST_URL = 'http://localhost:8081/users';
+        const NS       = 'http://example.com/auth';
+
+        let currentProfileId = null;
+
+        // ========== HELPERS ==========
+
+        function showMsg(elId, text, type) {
+            const el = document.getElementById(elId);
+            el.textContent = text;
+            el.className = 'msg ' + type;
+        }
+
+        function soapRequest(body) {
+            const envelope =
+                `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                                   xmlns:auth="${NS}">
+                    <soapenv:Body>${body}</soapenv:Body>
+                </soapenv:Envelope>`;
+            return fetch(SOAP_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/xml; charset=utf-8' },
+                body: envelope
+            }).then(r => r.text())
+              .then(txt => new DOMParser().parseFromString(txt, 'text/xml'));
+        }
+
+        function xmlVal(doc, localName) {
+            const nodes = doc.getElementsByTagNameNS(NS, localName);
+            return nodes.length > 0 ? nodes[0].textContent : '';
+        }
+
+        function authHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('jwt_token')
+            };
+        }
+
+        // ========== REGISTER ==========
+
+        async function register() {
+            const username = document.getElementById('reg-user').value.trim();
+            const password = document.getElementById('reg-pass').value.trim();
+            if (!username || !password) { showMsg('auth-msg', 'Please fill in both fields', 'error'); return; }
+
+            try {
+                const doc = await soapRequest(`
+                    <auth:registerUserRequest>
+                        <auth:username>${username}</auth:username>
+                        <auth:password>${password}</auth:password>
+                    </auth:registerUserRequest>`);
+
+                const success = xmlVal(doc, 'success') === 'true';
+                const message = xmlVal(doc, 'message');
+                showMsg('auth-msg', message, success ? 'success' : 'error');
+            } catch (e) {
+                showMsg('auth-msg', 'SOAP service unreachable: ' + e.message, 'error');
+            }
+        }
+
+        // ========== LOGIN ==========
+
+        async function login() {
+            const username = document.getElementById('login-user').value.trim();
+            const password = document.getElementById('login-pass').value.trim();
+            if (!username || !password) { showMsg('auth-msg', 'Please fill in both fields', 'error'); return; }
+
+            try {
+                const doc = await soapRequest(`
+                    <auth:loginUserRequest>
+                        <auth:username>${username}</auth:username>
+                        <auth:password>${password}</auth:password>
+                    </auth:loginUserRequest>`);
+
+                const success = xmlVal(doc, 'success') === 'true';
+                const token   = xmlVal(doc, 'token');
+                const message = xmlVal(doc, 'message');
+
+                if (success && token) {
+                    localStorage.setItem('jwt_token', token);
+                    showMsg('auth-msg', message, 'success');
+
+                    const td = document.getElementById('token-display');
+                    td.style.display = 'block';
+                    td.textContent = 'JWT: ' + token;
+
+                    loadProfiles();
+                } else {
+                    showMsg('auth-msg', message, 'error');
+                }
+            } catch (e) {
+                showMsg('auth-msg', 'SOAP service unreachable: ' + e.message, 'error');
+            }
+        }
+
+        // ========== LOAD PROFILES ==========
+
+        async function loadProfiles() {
+            const token = localStorage.getItem('jwt_token');
+            if (!token) { showMsg('auth-msg', 'Please login first', 'info'); return; }
+
+            try {
+                const res = await fetch(REST_URL, { headers: authHeaders() });
+
+                if (res.status === 401) {
+                    showMsg('auth-msg', 'Token invalid or expired. Please login again.', 'error');
+                    return;
+                }
+                if (res.status === 503) {
+                    showMsg('auth-msg', 'Auth service unavailable. Start SOAP service first.', 'error');
+                    return;
+                }
+
+                const users = await res.json();
+                document.getElementById('profile-card').classList.remove('hidden');
+
+                if (users.length > 0) {
+                    const u = users[0];
+                    currentProfileId = u.id;
+                    document.getElementById('profile-data').innerHTML = `
+                        <dt>ID:</dt><dd>${u.userId}</dd>
+                        <dt>Name:</dt><dd>${u.name}</dd>
+                        <dt>Email:</dt><dd>${u.email}</dd>
+                        <dt>Bio:</dt><dd>${u.bio || '—'}</dd>
+                        <dt>Phone:</dt><dd>${u.phone || '—'}</dd>`;
+
+                    document.getElementById('edit-name').value  = u.name  || '';
+                    document.getElementById('edit-email').value = u.email || '';
+                    document.getElementById('edit-bio').value   = u.bio   || '';
+                    document.getElementById('edit-phone').value = u.phone || '';
+                } else {
+                    document.getElementById('profile-data').innerHTML = '<dd>No profiles found.</dd>';
+                }
+            } catch (e) {
+                showMsg('profile-msg', 'JSON service unreachable: ' + e.message, 'error');
+            }
+        }
+
+        // ========== UPDATE PROFILE ==========
+
+        async function updateProfile() {
+            if (!currentProfileId) { showMsg('profile-msg', 'No profile loaded', 'error'); return; }
+
+            const body = {
+                name:  document.getElementById('edit-name').value.trim(),
+                email: document.getElementById('edit-email').value.trim(),
+                bio:   document.getElementById('edit-bio').value.trim(),
+                phone: document.getElementById('edit-phone').value.trim()
+            };
+
+            try {
+                const res = await fetch(`${REST_URL}/${currentProfileId}`, {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify(body)
+                });
+
+                if (res.status === 401) {
+                    showMsg('profile-msg', 'Token expired. Please login again.', 'error');
+                    return;
+                }
+
+                if (res.ok) {
+                    showMsg('profile-msg', 'Profile updated successfully!', 'success');
+                    document.getElementById('edit-form').style.display = 'none';
+                    loadProfiles();
+                } else {
+                    showMsg('profile-msg', 'Update failed', 'error');
+                }
+            } catch (e) {
+                showMsg('profile-msg', 'Error: ' + e.message, 'error');
+            }
+        }
+
+        // ========== TOGGLE EDIT ==========
+
+        function toggleEdit() {
+            const form = document.getElementById('edit-form');
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // ========== LOGOUT ==========
+
+        function logout() {
+            localStorage.removeItem('jwt_token');
+            currentProfileId = null;
+            document.getElementById('profile-card').classList.add('hidden');
+            document.getElementById('token-display').style.display = 'none';
+            document.getElementById('edit-form').style.display = 'none';
+            showMsg('auth-msg', 'Logged out successfully', 'info');
+        }
+
+        // ========== INIT ==========
+
+        if (localStorage.getItem('jwt_token')) {
+            loadProfiles();
+        }
+    </script>
+</body>
+</html>
